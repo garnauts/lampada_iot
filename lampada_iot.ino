@@ -6,6 +6,7 @@
 int RECV_PIN = 11;  
 float armazenavalor;  
 int pinorele = 13; 
+int pinorele2 = 12; 
 
 boolean ligado = true;
   
@@ -14,8 +15,10 @@ decode_results results;
   
 void setup()  
 {  
-  pinMode(pinorele, OUTPUT);   
+  pinMode(pinorele, OUTPUT);
+  pinMode(pinorele2, OUTPUT);    
   digitalWrite(pinorele, HIGH);
+  digitalWrite(pinorele2, LOW);
   Serial.begin(9600);  
   irrecv.enableIRIn(); // Inicializa o receptor IR  
 }  
@@ -33,9 +36,11 @@ void loop()
     //}  
     if(ligado){
       digitalWrite(pinorele, LOW);
+      digitalWrite(pinorele2, HIGH);
       ligado = false;
     } else {
       digitalWrite(pinorele, HIGH);
+      digitalWrite(pinorele2, LOW);
       ligado = true;
     }
     delay(1000);
