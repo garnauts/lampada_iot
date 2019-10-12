@@ -24,8 +24,20 @@ boolean ligado = true;
 IRrecv irrecv(RECV_PIN);
 decode_results results;
 
-void dlg() {
-  if (digitalRead(pininverteconfiguracoes) == LOW){
+int readpininverteconfiguracoes(){
+  int p = digitalRead(pininverteconfiguracoes);
+  p = LOW;
+  return p;
+}
+
+int readpininterruptor(){
+  int p = digitalRead(pininterruptor);
+  p = LOW;
+  return p;
+}
+
+void desliga() {
+  if (readpininverteconfiguracoes() == LOW){
     digitalWrite(pinorele, LOW);
     digitalWrite(pinorele2, HIGH);
   } else {
@@ -36,8 +48,8 @@ void dlg() {
   Serial.println("Desligado");
 }
 
-void lg() {
-  if (digitalRead(pininverteconfiguracoes) == LOW){
+void liga() {
+  if (readpininverteconfiguracoes() == LOW){
     digitalWrite(pinorele, HIGH);
     digitalWrite(pinorele2, LOW);
   } else {
@@ -49,31 +61,20 @@ void lg() {
   Serial.println("Ligado");
 }
 
-void liga(){
-  if (digitalRead(pininverteconfiguracoes) == LOW){
-    lg();
-  } else {
-    dlg();
-  }
-}
-
-void desliga(){
-   if (digitalRead(pininverteconfiguracoes) == LOW){
-    dlg();
-  } else {
-    lg();
-  }
-}
-
 void setup()
 {
   pinMode(pinorele, OUTPUT);
   pinMode(pinorele2, OUTPUT);
   pinMode(pininterruptor, INPUT);
   pinMode(pininverteconfiguracoes, INPUT);
-  ultimoStatusInterruptor = digitalRead(pininterruptor);
+  ultimoStatusInterruptor = readpininterruptor();
   Serial.begin(9600);
-  liga();
+  if (readpininverteconfiguracoes() == LOW){
+    liga();
+  } else {
+    Serial.println("Configurações invertidas...");
+    desliga();
+  }
   irrecv.enableIRIn(); // Inicializa o receptor IR
 }
 
@@ -83,10 +84,12 @@ void loop()
   //Desliga após algumm tempo esquecido ligado (7200000):
   boolean muitoTempoLigado = ligado == true and (millis() - milisQueFoiLigado) > 7200000;
   if (muitoTempoLigado) Serial.println("Muito tempo ligado...");
-  int statusInterruptor = digitalRead(pininterruptor);
+  int statusInterruptor = readpininterruptor();
   if (irrecv.decode(&results) or muitoTempoLigado or statusInterruptor != ultimoStatusInterruptor)
   {
     ultimoStatusInterruptor = statusInterruptor;
+    Serial.print("Status interruptor : ");
+    Serial.println(statusInterruptor);
     Serial.print("Valor lido : ");
     Serial.println(results.value, HEX);
     armazenavalor = (results.value);
