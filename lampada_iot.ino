@@ -33,7 +33,9 @@ int readpininverteconfiguracoes(){
 
 int readpininterruptor(){
   int p = digitalRead(pininterruptor);
-  p = LOW;
+  //Serial.print("READINTERRUPTOR: ");
+  //Serial.println(p);
+  //p = LOW;
   return p;
 }
 
