@@ -1,7 +1,7 @@
 // Programa : Liga ou Desliga uma lampada, no bocal ou na tomada.
 // Autor : Gilberto Carlos Arnauts
 
-//Pino 4: Inverte as configurações de ligado e desligado.
+//Pino 4: Inverte as configurações de ligado e desligado, sendo ligado para o rele desligado.
 
 //Pino 7: Entrada de um interruptor 5 V que quando tem o status alerado, provoca o desligamento ou ligamento da lampada.
 //Pino 11: Entrada do sensor de infravermelho.
@@ -26,7 +26,8 @@ decode_results results;
 
 int readpininverteconfiguracoes(){
   int p = digitalRead(pininverteconfiguracoes);
-  p = LOW;
+  if (p == LOW) p = HIGH;
+  else p = LOW;
   return p;
 }
 
@@ -78,6 +79,24 @@ void setup()
   irrecv.enableIRIn(); // Inicializa o receptor IR
 }
 
+boolean isTecla(float valorLido){
+  //Valores do meu controle da T.V. de 20 polegadas da AOC, taclas a não considerar:
+  Serial.println(valorLido);
+  if(valorLido == 12419199.00) return false; //liga desliga
+  if(valorLido == 12390639.00) return false; //source
+  if(valorLido == 12388599.00) return false; //menos volume
+  if(valorLido == 12398799.00) return false; //mais volume
+  if(valorLido == 12394719.00) return false; //mudo
+  if(valorLido == 12406959.00) return false; //menu
+  if(valorLido == 12395229.00) return false; //back
+  if(valorLido == 12431439.00) return false; //ok
+  if(valorLido == 12439599.00) return false; //cima
+  if(valorLido == 12407469.00) return false;  //direita
+  if(valorLido == 12447759.00) return false; //baixo
+  if(valorLido == 12423789.00) return false;  //esquerda 
+  return true;
+}
+
 void loop()
 {
   //Serial.println(millis());
@@ -85,7 +104,14 @@ void loop()
   boolean muitoTempoLigado = ligado == true and (millis() - milisQueFoiLigado) > 7200000;
   if (muitoTempoLigado) Serial.println("Muito tempo ligado...");
   int statusInterruptor = readpininterruptor();
-  if (irrecv.decode(&results) or muitoTempoLigado or statusInterruptor != ultimoStatusInterruptor)
+  boolean tecla = false;
+  if (irrecv.decode(&results)){
+    tecla = isTecla(results.value);
+    if (!tecla)
+      Serial.println("Tecla ignorada...");
+    irrecv.resume(); //Le o próximo valor
+  }
+  if (tecla or muitoTempoLigado or statusInterruptor != ultimoStatusInterruptor)
   {
     ultimoStatusInterruptor = statusInterruptor;
     Serial.print("Status interruptor : ");
@@ -103,7 +129,6 @@ void loop()
       liga();
     }
     delay(1000);
-    irrecv.resume(); //Le o próximo valor
   }
   delay(150);
 }
